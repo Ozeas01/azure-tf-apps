@@ -4,15 +4,6 @@ resource "azurerm_resource_group" "rg" {
   location = var.location
   tags     = var.tags
 }
-
-# Storage do ambiente (opcional – pode deixar para depois)
-# module "storage" {
-#   source              = "../../modules/storage_account"
-#   resource_group_name = azurerm_resource_group.rg.name
-#   location            = var.location
-#   name_prefix         = "appstd"
-# }
-
 module "webapps" {
   for_each            = var.apps                         
   source              = "../../modules/app_service"

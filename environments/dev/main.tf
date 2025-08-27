@@ -18,7 +18,3 @@ module "webapps" {
   app_settings  = lookup(each.value, "app_settings", {})
 }
 
-# Saída: hostname de cada app
-output "apps_urls" {
-  value = { for k, m in module.webapps : k => m.default_hostname }
-}

@@ -6,7 +6,7 @@ resource "azurerm_resource_group" "rg" {
 }
 module "webapps" {
   for_each            = var.apps                         
-  source              = "../../modules/app_service"
+  source              = "../modules/app_service"
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
 

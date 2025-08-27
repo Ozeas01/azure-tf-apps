@@ -1,39 +1,33 @@
-# 1) Resource Group do ambiente
+# Resource Group do ambiente
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group
   location = var.location
   tags     = var.tags
 }
 
-# 2) Storage (via módulo)
-module "storage" {
-  source              = "../../modules/storage_account"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = var.location
+# Storage do ambiente (opcional – pode deixar para depois)
+# module "storage" {
+#   source              = "../../modules/storage_account"
+#   resource_group_name = azurerm_resource_group.rg.name
+#   location            = var.location
+#   name_prefix         = "appstd"
+# }
 
-  name_prefix = "appstd"         # regra de nome padronizada
-  # sku = "Standard_LRS"         # (opcional) override
-  # kind = "StorageV2"           # (opcional) override
-}
-
-# 3) App Service (via módulo)
-module "webapp" {
+module "webapps" {
+  for_each            = var.apps                         
   source              = "../../modules/app_service"
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
 
-  plan_name     = "plan-dev-main"
-  plan_sku      = "B1"
-  plan_os       = "Linux"
-  app_name      = "webapp-dev-main"
-  runtime_stack = "NODE|18-lts"  # exemplo de stack
-
-  app_settings = {
-    "ASPNETCORE_ENVIRONMENT"         = "Development"
-    "AZURE_STORAGE_CONNECTION_STRING"= module.storage.primary_connection_string
-  }
+  plan_name     = each.value.plan_name
+  plan_sku      = each.value.plan_sku
+  plan_os       = each.value.plan_os
+  app_name      = each.value.app_name
+  runtime_stack = each.value.runtime_stack
+  app_settings  = lookup(each.value, "app_settings", {})
 }
 
-# 4) Saídas úteis
-output "web_url"         { value = module.webapp.default_hostname }
-output "storage_account" { value = module.storage.name }
+# Saída: hostname de cada app
+output "apps_urls" {
+  value = { for k, m in module.webapps : k => m.default_hostname }
+}
